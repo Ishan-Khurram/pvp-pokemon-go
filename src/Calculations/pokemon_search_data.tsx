@@ -3,13 +3,13 @@ import pokemon_info from "data/pokemon_info.json"
 import SearchBar from 'Components/search_bar';
 
 interface PokemonDataProps {
-    pokedex: number;
+    poke_name: string;
 
 }
 
-const PokemonInfo: React.FC<PokemonDataProps> = ({ pokedex }) => {
-    const pokemon = pokemon_info.find(item => item.dex === pokedex);
-    const name = pokemon ? pokemon.speciesName : 'Pokemon not found';
+const PokemonSearchInfo: React.FC<PokemonDataProps> = ({ poke_name }) => {
+    const pokemon = pokemon_info.find(item => item.speciesId === poke_name);
+    const pokedex = pokemon ? pokemon.dex : 'Pokedex number not found';
     const type = pokemon ? pokemon.types : 'Type not found';
     const fast_moves = pokemon ? pokemon.fastMoves: 'Moves not found';
     const charged_moves = pokemon ? pokemon.chargedMoves: 'Moves not found';
@@ -19,7 +19,7 @@ const PokemonInfo: React.FC<PokemonDataProps> = ({ pokedex }) => {
         <p>
           Pokedex #: {pokedex}, 
           <br></br>
-          Name: {name}, 
+          Name: {poke_name} 
           <br></br>
           Type: {type}
           <br></br>
@@ -31,5 +31,5 @@ const PokemonInfo: React.FC<PokemonDataProps> = ({ pokedex }) => {
     );
   };
   
-  export default PokemonInfo;
+  export default PokemonSearchInfo;
     

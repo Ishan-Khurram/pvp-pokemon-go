@@ -1,7 +1,14 @@
 import React from 'react';
+import PokemonSearchBar  from 'Components/movelist_searchbar';
+
 
 const Movelist: React.FC = () => {
-  return <div>Here is the move list for all pokemon and all the stats related to the move list</div>;
+  return (
+    <div>
+            <h1>Pokémon Data Search</h1>
+            <PokemonSearchBar />
+    </div>
+);
 };
 
 export default Movelist;

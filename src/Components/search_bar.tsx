@@ -1,24 +1,7 @@
 import React, { useState } from 'react';
 import pokemon_info from 'data/pokemon_info.json';
-import fast_moves from 'data/fast_moves.json'
-import charged_moves from 'data/charged_moves.json'
-import { calculateTurnsForEnergyMatch } from 'Calculations/energy_calculations'
+import { fastmoves, chargedmoves } from 'Calculations/energy_calculations';
 
-// Define all types for moves
-interface Move {
-    pokemon: string;
-    move: string;
-    move_kind: string;
-    type: string;
-    stab_bonus: number;
-    damage: number;
-    energy_gain: number;
-    turns: number;
-    damage_per_turn: number;
-    energy_per_turn: number;
-    archetype: string;
-    notes: string;
-}
 
 // Define the type for a single Pokémon
 interface Pokemon {
@@ -64,6 +47,16 @@ const SearchBar = () => {
         setSelectedPokemon(pokemon);
     };
 
+    const getEnergyGainedForFastMove = (moveName: string): number => {
+        const moveInfo = fastmoves.find(move => move.move === moveName);
+        return moveInfo ? moveInfo.energy_gain : 0;
+    };
+
+    const getEnergyNeededForChargedMove = (moveName: string): number => {
+        const moveInfo = chargedmoves.find(move => move.move === moveName);
+        return moveInfo ? moveInfo.energy : 0;
+    };
+
     return (
         <div>
             <input
@@ -93,9 +86,8 @@ const SearchBar = () => {
                     <h2>{selectedPokemon.speciesName}</h2>
                     <p>Typing: {selectedPokemon.types.map(capitalizeFirstLetter).join(', ')}</p>
                     <p>Fast Attacks: {selectedPokemon.fastMoves.map(capitalizeFirstLetter).join(', ')}</p>
-                    <p>Fast Attacks Energy Gained Per Turn: {selectedPokemon.energy_per_turn.map(capitalizeFirstLetter).join(', ')}</p>
                     <p>Charged Attacks: {selectedPokemon.chargedMoves.map(capitalizeFirstLetter).join(', ')}</p>
-                    <p>Charged Attacks Total Energy Cost: {selectedPokemon.fastMoves.map(capitalizeFirstLetter).join(', ')}</p>
+
                     {/* Add more details here */}
                 </div>
             )}
