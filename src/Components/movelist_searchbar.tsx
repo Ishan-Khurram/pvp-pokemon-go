@@ -1,39 +1,11 @@
 import React, { useState } from 'react';
+import fast_moves_data from 'data/fast_moves.json'
+import charged_moves_data from 'data/charged_moves.json'
 import pokemon_info from 'data/pokemon_info.json'
-import fast_moves from 'data/fast_moves.json'
-import charged_moves from 'data/charged_moves.json'
 
-interface quickMoves {
-    pokemon: string;
-    move: string;
-    move_kind: string;
-    type: string;
-    stab_bonus: number;
-    damage: number;
-    energy_gain: number; 
-    turns: number;
-    damage_per_turn: number;
-    energy_per_turn:number;
-    archetype: string;
+// define the typing for a single pokemon
 
-}
-
-
-interface chargedMoves {
-    pokemon: string;
-    move: string;
-    move_kind: string;
-    type: string;
-    stab_bonus: number;
-    damage: number;
-    energy:number;
-    effect: string;
-    archetype: string;
-
-}
-
-// Define the type for a single Pokémon
-interface Pokemon {
+interface BasicPokemonInfo {
     dex: number;
     speciesName: string;
     speciesId: string;
@@ -54,86 +26,97 @@ interface Pokemon {
     };
 }
 
+// define all fastmoves and all the data attributed to said fast move 
+
+interface FastMove{
+    pokemon:string;
+    move: string;
+    type: string;
+    damage: number;
+    energy_gain: number;
+    turns: number;
+    damage_per_turn: number | string;
+    energy_per_turn: number | string;
+    archetype: string;
+}
+
+// define all charged moved and all the data arrtributed to said charged move.
+
+interface ChargedMove {
+    pokemon: string;
+    move: string;
+    type: string;
+    damage: number;
+    energy: number;
+    effect: string;
+    archetype: string;
+}
 
 function capitalizeFirstLetter (str:string):string{
     return str.toLowerCase().replace(/^.|\s\S/g, (match) => match.toUpperCase());
 }
 
 
-const PokemonSearchBar: React.FC = () => {
-    const [searchInput, setSearchInput] = useState<string>("");
-    const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+const Search = () => {
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedPokemon, setSelectedPokemon] = useState<BasicPokemonInfo | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchInput(e.target.value);
-        setSelectedPokemon(null);
-    };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+    setSelectedPokemon(null); // Clear selectedPokemon when input changes
+  };
 
-    const handleSelectPokemon = (pokemon: Pokemon) => {
-        setSelectedPokemon(pokemon);
-    };
-
-    const matchingPokemon = pokemon_info.filter(pokemon =>
-        pokemon.speciesName.toLowerCase().includes(searchInput.toLowerCase())
+  const handleSearch = () => {
+    // Search for a matching speciesName
+    const matchedPokemon = pokemon_info.find(pokemon =>
+      pokemon.speciesName.toLowerCase() === searchInput.toLowerCase()
     );
 
-    const getEnergyGainForMove = (moveName: string): number => {
-        const moveInfo = fast_moves.find((move) => move.move === moveName);
-        return moveInfo ? moveInfo.energy_gain : 0;
-    };
+    // If a match is found, set selectedPokemon
+    setSelectedPokemon(matchedPokemon || null);
+  };
 
-    const getEnergyNeededForMove = (moveName: string): number => {
-        const moveInfo = charged_moves.find((move) => move.move === moveName);
-        return moveInfo ? moveInfo.energy : 0;
-    };
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search for a Pokémon"
+        value={searchInput}
+        onChange={handleChange}
+      />
+      <button onClick={handleSearch}>Search</button>
 
-
-    return (
+      {selectedPokemon && (
         <div>
-            <input
-                type="text"
-                placeholder="Search for a Pokémon"
-                onChange={handleChange}
-                value={searchInput}
-            />
-            <select onChange={(e) => handleSelectPokemon(JSON.parse(e.target.value))}>
-                <option>Select a Pokémon</option>
-                {matchingPokemon.map(pokemon => (
-                    <option key={pokemon.speciesId} value={JSON.stringify(pokemon)}>
-                        {pokemon.speciesName}
-                    </option>
-                ))}
-            </select>
+          <h2>{selectedPokemon.speciesName}</h2>
+          <p>Types: {selectedPokemon.types.map(capitalizeFirstLetter).join(', ')}</p>
 
-            {selectedPokemon && (
-                <div>
-                    <h2>{selectedPokemon.speciesName}</h2>
-                    <p>Typing: {selectedPokemon.types.map(capitalizeFirstLetter).join(', ')}</p>
-                    <p>Fast Attacks: {selectedPokemon.fastMoves.map(capitalizeFirstLetter).join(', ')}</p>
-                    <p>Charged Attacks: {selectedPokemon.chargedMoves.map(capitalizeFirstLetter).join(', ')}</p>
-                    <h3>Fast Moves:</h3>
-                    <ul>
-                        {selectedPokemon.fastMoves.map((fastMoveName, index) => (
-                            <li key={index}>
-                                {capitalizeFirstLetter(fastMoveName)} (Energy Gain: {getEnergyGainForMove(fastMoveName)})
-                            </li>
-                        ))}
-                    </ul>
+          {/* Display fast moves and charged moves information */}
+          <h3>Fast Moves:</h3>
+          <ul>
+            {fast_moves_data
+              .filter(move => move.pokemon === selectedPokemon.speciesName)
+              .map((move, index) => (
+                <li key={index}>
+                  Move: {move.move}, (Energy Gained Per Use: {move.energy_gain})
+                </li>
+              ))}
+          </ul>
 
-                    <h3>Charged Moves:</h3>
-                    <ul>
-                        {selectedPokemon.chargedMoves.map((chargedMoveName, index) => (
-                            <li key={index}>
-                                {capitalizeFirstLetter(chargedMoveName)} (Energy Needed: {getEnergyNeededForMove(chargedMoveName)})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+          <h3>Charged Moves:</h3>
+          <ul>
+            {charged_moves_data
+              .filter(move => move.pokemon === selectedPokemon.speciesName)
+              .map((move, index) => (
+                <li key={index}>
+                  Move: {move.move}, (Energy Required: {move.energy})
+                </li>
+              ))}
+          </ul>
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
-
-export default PokemonSearchBar;
-    
+export default Search;
