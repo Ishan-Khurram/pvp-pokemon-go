@@ -7,6 +7,7 @@ const Pokemon: React.FC = () => {
   return(
 
   <div>
+    <h1 className="page-title">Pokemon Data</h1>
     <SearchBar/>
   </div>
   )

@@ -1,0 +1,122 @@
+  /* Style for webpage titles. */
+  .page-title {
+    font-family: Arial, Helvetica, sans-serif; 
+    text-align: center;
+  }
+
+  /* Style for Navlink titles. */
+  .nav-links {
+    height: 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    position: relative;
+    padding: 0.5rem 0rem;
+    list-style-type: none;
+  }
+
+  /*Style for nav link on hover. */
+  .nav-links:hover {
+    color: gray;
+  }
+
+
+/* Style for the main container */
+.search-container {
+    max-width: 500px;
+    margin:  auto;
+    padding: 10px;
+    border: 2px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    background-color: #fff;
+  }
+  
+  /* Style for the search input */
+  .search-input {
+    width: 75%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  /* Style for the search button */
+  .search-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  
+  /* Style for the search result container */
+  .result-container {
+    margin-top: 20px;
+  }
+  
+  /* Style for the search result details */
+  .result-details {
+    margin-top: 20px;
+  }
+  
+  /* Style for the list items */
+  .list-item {
+    margin-bottom: 10px;
+  }
+
+/* Style for the dropdown list */
+.dropdown-list {
+    max-height: 200px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 25%;
+  }
+  
+  .dropdown-list li {
+    padding: 8.5px;
+    cursor: pointer;
+  }
+  
+  .dropdown-list li:hover {
+    background-color: #f5f5f5;
+  }
+
+  /* Table styles */
+
+.moves-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  margin-right: auto;
+  margin-left: 0px;
+}
+
+.moves-table th,
+.moves-table td {
+  border: 1px solid #ddd; /* Add a border around each cell */
+  padding: 8px;
+  text-align: center;
+  margin-right: auto;
+  margin-left: 0px;
+}
+
+.moves-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.moves-table td {
+  background-color: #fff;
+  border: 1px solid #ddd; /* Add a border around each cell */
+}
+
