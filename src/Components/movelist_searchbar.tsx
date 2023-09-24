@@ -101,50 +101,57 @@ const Search = () => {
     setSelectedPokemon(pokemon);
   };
 
-  const calculateFastMoveCountForChargedMove = (
+  const calculateFastMoveCountsForChargedMove = (
     pokemonName: string,
     fastMoveNames: string[],
-    chargedMoveEnergy: number
-  ): { movesNeeded: number; remainder: number } => {
+    chargedMoveEnergy: number,
+    repetitions: number
+  ): { movesNeeded: number[]; remainder: number } => {
     const fastMoves: FastMove[] = fast_moves_data.filter(
       (move) =>
         move.pokemon === pokemonName && fastMoveNames.includes(move.move)
     );
-  
+
     if (fastMoves.length === 0) {
       // No matching fast moves found
-      return { movesNeeded: -1, remainder: -1 }; // Use -1 to indicate no matching moves were found
+      return { movesNeeded: [], remainder: -1 }; // Use -1 to indicate no matching moves were found
     }
-  
+
     // Calculate total energy gained
     const totalEnergyGained: number = fastMoves.reduce(
       (total, move) => total + move.energy_gain,
       0
     );
-  
+
     if (totalEnergyGained === 0) {
       // No energy gained from fast moves
-      return { movesNeeded: -1, remainder: -1 }; // Use -1 to indicate no energy gained from fast moves
+      return { movesNeeded: [], remainder: -1 }; // Use -1 to indicate no energy gained from fast moves
     }
-  
+
     let remainder = chargedMoveEnergy;
-    let movesNeeded = 0;
-  
-    for (let i = 0; i < 5; i++) {
-      if (remainder >= totalEnergyGained) {
-        const moves = Math.floor(remainder / totalEnergyGained);
-        movesNeeded += moves;
-        remainder %= totalEnergyGained;
-      } else {
-        break;
-      }
+    let movesNeeded: number[] = [];
+
+    // Calculate how many times the charged move can be executed with the current energy
+    const chargedMoveExecutions = Math.ceil(remainder / totalEnergyGained);
+    movesNeeded = Array(repetitions).fill(chargedMoveExecutions);
+
+    // Calculate the remainder of energy as a surplus
+    remainder -= chargedMoveExecutions * totalEnergyGained;
+
+    // Calculate how many more fast moves are needed to execute the charged move multiple times
+    for (let i = 0; i < repetitions; i++) {
+      const movesForAdditionalChargedMoves = Math.ceil(
+        (chargedMoveEnergy - remainder) / totalEnergyGained
+      );
+      movesNeeded[i] += movesForAdditionalChargedMoves;
+      remainder += movesForAdditionalChargedMoves * totalEnergyGained;
     }
-  
-    return { movesNeeded, remainder };
+
+    return { movesNeeded, remainder: Math.abs(remainder) };
   };
 
   return (
-    <div className="search-container">
+    <div>
       <input
         type="text"
         className="search-input"
@@ -157,9 +164,9 @@ const Search = () => {
         Search
       </button>
 
-      {/* drop down list */}
+      {/* Drop-down list */}
       {filteredPokemonList.length > 0 && (
-        <ul className="dropdown-list" ref={dropDownRef}>
+        <ul ref={dropDownRef} className="pokemon-list">
           {filteredPokemonList.map((pokemon) => (
             <li
               key={pokemon.speciesId}
@@ -171,72 +178,93 @@ const Search = () => {
         </ul>
       )}
 
+      {selectedPokemon && (
+        <div>
+          {/* Display Pokémon name */}
+          <h2 className="pokemon-name">{selectedPokemon.speciesName}</h2>
+
+          {/* Display fast moves */}
+          <h3 className="move-heading">Fast Moves:</h3>
+          <ul className="move-list">
+            {fast_moves_data
+              .filter((move) => move.pokemon === selectedPokemon.speciesName)
+              .map((move, index) => (
+                <li key={index}>
+                  {move.move}, Energy Gain: {move.energy_gain}
+                </li>
+              ))}
+          </ul>
+
+          {/* Display Charged moves */}
+          <h3 className="move-heading">Charged Moves:</h3>
+          <ul className="move-list">
+            {charged_moves_data
+              .filter((move) => move.pokemon === selectedPokemon.speciesName)
+              .map((move, index) => (
+                <li key={index}>
+                  {move.move}, Energy Needed: {move.energy}
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
 {selectedPokemon && (
-  <div className="result-container">
-    {/* Display Pokémon name */}
-    <h2>{selectedPokemon.speciesName}</h2>
+    <div>
+      {/* Display amount of moves it takes to execute charged move in a table */}
+      <h3 className="move-heading">
+        Amount of moves it takes to execute one charged move (3 Consecutive Times):
+      </h3>
+      <table className="move-table">
+        <thead>
+          <tr>
+            <th>{selectedPokemon.speciesName}</th>
+            {fast_moves_data
+              .filter(
+                (fastMove) =>
+                  fastMove.pokemon === selectedPokemon.speciesName
+              )
+              .map((fastMove, index) => (
+                <th key={index}>{fastMove.move}</th>
+              ))}
+          </tr>
+        </thead>
+        <tbody>
+          {charged_moves_data
+            .filter(
+              (cmMove) => cmMove.pokemon === selectedPokemon.speciesName
+            )
+            .map((cmMove, cmIndex) => (
+              <tr key={cmIndex}>
+                <td>{cmMove.move}</td>
+                {fast_moves_data
+                  .filter(
+                    (fastMove) =>
+                      fastMove.pokemon === selectedPokemon.speciesName
+                  )
+                  .map((fastMove, fastIndex) => {
+                    const { movesNeeded, remainder } =
+                      calculateFastMoveCountsForChargedMove(
+                        selectedPokemon.speciesName,
+                        [fastMove.move],
+                        cmMove.energy,
+                        3 // 3 consecutive times
+                      );
+                    return (
+                      <td key={fastIndex}>
+                        {movesNeeded.length === 0
+                          ? "No matching moves"
+                          : `${movesNeeded.join(', ')} (+${Math.abs(remainder)} remainder)`}
+                      </td>
+                    );
+                  })}
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  )}
 
-    {/* Display fast moves */}
-    <h3 className="result-details">Fast Moves:</h3>
-    <ul>
-      {fast_moves_data.filter((move) => move.pokemon === selectedPokemon.speciesName).map((move, index) => (
-          <li key={index} className="list-item">
-            {move.move}, Energy Gain: {move.energy_gain}
-          </li>
-        ))}
-    </ul>
-
-    {/* Display Charged moves */}
-    <h3 className="result-details">Charged Moves:</h3>
-    <ul>
-      {charged_moves_data.filter((move) => move.pokemon === selectedPokemon.speciesName).map((move, index) => (
-          <li key={index} className="list-item">
-            {move.move}, Energy Needed: {move.energy}
-          </li>
-        ))}
-    </ul>
-
-    {/* Display amount of moves it takes to execute charged move in a table */}
-    <h3>Amount of moves it takes to execute one charged move:</h3>
-    <ul>
-      {charged_moves_data.filter((move) => move.pokemon === selectedPokemon.speciesName).map((move, index) => (
-          <table key={index} className="moves-table">
-                <thead>
-                  <tr>
-                    <th>{selectedPokemon.speciesName}</th>
-                    {fast_moves_data.filter((fastMove) => fastMove.pokemon === selectedPokemon.speciesName).map((fastMove, index) => (
-                        <th key={index} className="table-item">
-                          {fastMove.move}
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {charged_moves_data.filter((cmMove) => cmMove.pokemon === selectedPokemon.speciesName).map((cmMove, cmIndex) => (
-                      <tr key={cmIndex} className="table-item">
-                        <td>{cmMove.move}</td>
-                        {fast_moves_data.filter((fastMove) => fastMove.pokemon === selectedPokemon.speciesName).map((fastMove, fastIndex) => {
-                            const { movesNeeded, remainder } = calculateFastMoveCountForChargedMove(
-                              selectedPokemon.speciesName,
-                              [fastMove.move],
-                              cmMove.energy
-                            );
-                            return (
-                              <td key={fastIndex} className="table-item">
-                                {movesNeeded === -1
-                                  ? 'No matching moves'
-                                  : `${movesNeeded} (${remainder} remainder)`}
-                              </td>
-                            );
-                          })}
-                      </tr>
-                    ))}
-                </tbody>
-          </table>
-        ))}
-    </ul>
-  </div>
-)}
     </div>
   );
 };
