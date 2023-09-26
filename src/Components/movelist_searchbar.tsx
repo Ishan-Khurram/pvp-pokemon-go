@@ -104,51 +104,53 @@ const Search = () => {
   const calculateFastMoveCountsForChargedMove = (
     pokemonName: string,
     fastMoveNames: string[],
-    chargedMoveEnergy: number,
-    repetitions: number
+    chargedMoveEnergy: number
   ): { movesNeeded: number[]; remainder: number } => {
     const fastMoves: FastMove[] = fast_moves_data.filter(
       (move) =>
         move.pokemon === pokemonName && fastMoveNames.includes(move.move)
     );
-
+  
     if (fastMoves.length === 0) {
       // No matching fast moves found
       return { movesNeeded: [], remainder: -1 }; // Use -1 to indicate no matching moves were found
     }
-
+  
     // Calculate total energy gained
     const totalEnergyGained: number = fastMoves.reduce(
       (total, move) => total + move.energy_gain,
       0
     );
-
+  
     if (totalEnergyGained === 0) {
       // No energy gained from fast moves
       return { movesNeeded: [], remainder: -1 }; // Use -1 to indicate no energy gained from fast moves
     }
-
-    let remainder = chargedMoveEnergy;
+  
+    let remainder = -.01;
     let movesNeeded: number[] = [];
-
-    // Calculate how many times the charged move can be executed with the current energy
-    const chargedMoveExecutions = Math.ceil(remainder / totalEnergyGained);
-    movesNeeded = Array(repetitions).fill(chargedMoveExecutions);
-
-    // Calculate the remainder of energy as a surplus
-    remainder -= chargedMoveExecutions * totalEnergyGained;
-
-    // Calculate how many more fast moves are needed to execute the charged move multiple times
-    for (let i = 0; i < repetitions; i++) {
-      const movesForAdditionalChargedMoves = Math.ceil(
-        (chargedMoveEnergy - remainder) / totalEnergyGained
+  
+    for (let i = 0; i < 3; i++) {
+      // Calculate how many times the charged move can be executed with the current energy
+      let chargedMoveExecutions = Math.floor(
+        (chargedMoveEnergy + remainder) / totalEnergyGained
       );
-      movesNeeded[i] += movesForAdditionalChargedMoves;
-      remainder += movesForAdditionalChargedMoves * totalEnergyGained;
+  
+      // Calculate the remainder of energy after executing the charged move
+      remainder = (chargedMoveEnergy + remainder) % totalEnergyGained;
+  
+      if (i === 0 && remainder > 0) {
+        // For the first move, if there's a remainder, add one more fast move
+        chargedMoveExecutions++;
+      }
+      
+  
+      movesNeeded.push(chargedMoveExecutions);
     }
-
-    return { movesNeeded, remainder: Math.abs(remainder) };
+  
+    return { movesNeeded, remainder };
   };
+  
 
   return (
     <div>
@@ -209,62 +211,61 @@ const Search = () => {
         </div>
       )}
 
-{selectedPokemon && (
-    <div>
-      {/* Display amount of moves it takes to execute charged move in a table */}
-      <h3 className="move-heading">
-        Amount of moves it takes to execute one charged move (3 Consecutive Times):
-      </h3>
-      <table className="move-table">
-        <thead>
-          <tr>
-            <th>{selectedPokemon.speciesName}</th>
-            {fast_moves_data
-              .filter(
-                (fastMove) =>
-                  fastMove.pokemon === selectedPokemon.speciesName
-              )
-              .map((fastMove, index) => (
-                <th key={index}>{fastMove.move}</th>
-              ))}
-          </tr>
-        </thead>
-        <tbody>
-          {charged_moves_data
-            .filter(
-              (cmMove) => cmMove.pokemon === selectedPokemon.speciesName
-            )
-            .map((cmMove, cmIndex) => (
-              <tr key={cmIndex}>
-                <td>{cmMove.move}</td>
+      {selectedPokemon && (
+        <div>
+          {/* Display amount of moves it takes to execute charged move in a table */}
+          <h3 className="move-heading">
+            Amount of moves it takes to execute one charged move (3 Consecutive
+            Times):
+          </h3>
+          <table className="move-table">
+            <thead>
+              <tr>
+                <th>{selectedPokemon.speciesName}</th>
                 {fast_moves_data
                   .filter(
                     (fastMove) =>
                       fastMove.pokemon === selectedPokemon.speciesName
                   )
-                  .map((fastMove, fastIndex) => {
-                    const { movesNeeded, remainder } =
-                      calculateFastMoveCountsForChargedMove(
-                        selectedPokemon.speciesName,
-                        [fastMove.move],
-                        cmMove.energy,
-                        3 // 3 consecutive times
-                      );
-                    return (
-                      <td key={fastIndex}>
-                        {movesNeeded.length === 0
-                          ? "No matching moves"
-                          : `${movesNeeded.join(', ')} (+${Math.abs(remainder)} remainder)`}
-                      </td>
-                    );
-                  })}
+                  .map((fastMove, index) => (
+                    <th key={index}>{fastMove.move}</th>
+                  ))}
               </tr>
-            ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-
+            </thead>
+            <tbody>
+              {charged_moves_data
+                .filter(
+                  (cmMove) => cmMove.pokemon === selectedPokemon.speciesName
+                )
+                .map((cmMove, cmIndex) => (
+                  <tr key={cmIndex}>
+                    <td>{cmMove.move}</td>
+                    {fast_moves_data
+                      .filter(
+                        (fastMove) =>
+                          fastMove.pokemon === selectedPokemon.speciesName
+                      )
+                      .map((fastMove, fastIndex) => {
+                        const { movesNeeded, remainder } =
+                          calculateFastMoveCountsForChargedMove(
+                            selectedPokemon.speciesName,
+                            [fastMove.move],
+                            cmMove.energy
+                          );
+                        return (
+                          <td key={fastIndex}>
+                          {movesNeeded.length === 0
+                            ? "No matching moves"
+                          : `${movesNeeded.join('  |  ')}`}
+                        </td>
+                        );
+                      })}
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
