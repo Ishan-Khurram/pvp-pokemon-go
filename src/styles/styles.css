@@ -1,36 +1,69 @@
+
   /* Style for webpage titles. */
   .page-title {
-    font-family: Arial, Helvetica, sans-serif; 
+    font-family: sans-serif; 
     text-align: center;
   }
 
-  /* Style for Navlink titles. */
-  .nav-links {
-    height: 20px;
-    overflow: hidden;
-    width: 100%;
+  /* Styles for search bar and drop down menu */
+
+  .search {
     display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    position: relative;
-    padding: 0.5rem 0rem;
-    list-style-type: none;
-    
+    justify-content: center;
+    margin-top: 20px;
   }
 
-  /*Style for nav link on hover. */
-  .nav-links:hover {
-    color: gray;
+  .search input{
+    padding: 10 px;
+    width: 300px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+
   }
-  .search-input {
-    
+
+  .search-dropdown {
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0, 3px, 6px rgba (0, 0, 0, 0.1);
+  }
+
+  .search-dropdown ul {
+    justify-content: center;
+    width: 300px;
+
+  }
+
+  .search-dropdown li {
+    padding: 10px; 
+    cursor: pointer;
+    transition: .2s;
+    text-align: center;
+  }
+
+  .search-dropdown li:hover {
+    background-color: #f0f0f0;
   }
 
 
 
 
+/* Style for table and its values. */
+  table, tr, th, td, caption {
+    border: 1px solid black; 
+    font-family: sans-serif; 
+    border-collapse: collapse; 
+    padding: 0.5rem;
+    text-align: center;
+
+  }
 
 
+  /* Dark Mode */
   :root {
     --font-color: #333;
     --background-color: #eee;
@@ -113,4 +146,3 @@
   .slider.round:before {
     border-radius: 50%;
   }
-  

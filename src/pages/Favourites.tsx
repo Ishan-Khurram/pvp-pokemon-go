@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import PokemonSearchInfo from 'Calculations/pokemon_search_data';
 import SearchBar from 'Components/search_bar';
+import Search from "Components/test-search";
 
 
 const Pokemon: React.FC = () => {
   return(
 
-  <div>
+  <section>
     <h1 className="page-title">Pokemon Data</h1>
     <SearchBar/>
-  </div>
+  </section>
   )
 };
 

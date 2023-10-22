@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import fast_moves_data from "data/fast_moves.json";
 import charged_moves_data from "data/charged_moves.json";
 import pokemon_info from "data/pokemon_info.json";
@@ -14,7 +15,7 @@ interface BasicPokemonInfo {
   // ... other properties
 }
 
-// Define all fast moves and all the data attributed to said fast move
+// Define all fastmoves and all the data attributed to said fast move
 interface FastMove {
   pokemon: string;
   move: string;
@@ -24,28 +25,18 @@ interface FastMove {
   // ... other properties
 }
 
-// Define all charged moves and all the data attributed to said charged move.
-interface ChargedMove {
-  pokemon: string;
-  move: string;
-  type: string;
-  damage: number;
-  energy: number;
-  effect: string;
-  archetype: string;
-}
-
 const SearchBar = () => {
   const [searchInput, setSearchInput] = useState("");
-  const [filteredPokemonList, setFilteredPokemonList] = useState<BasicPokemonInfo[]>(
-    []
-  );
-  const [selectedPokemon, setSelectedPokemon] = useState<BasicPokemonInfo | null>(
-    null
-  );
+  const [filteredPokemonList, setFilteredPokemonList] = useState<
+    BasicPokemonInfo[]
+  >([]);
+
+  const [selectedPokemon, setSelectedPokemon] =
+    useState<BasicPokemonInfo | null>(null);
+
   const dropDownRef = useRef<HTMLUListElement>(null);
 
-  // On user click outside of drop-down menu, the menu with close.
+  // On user click outside of drop down menu, the menu with close.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -73,21 +64,21 @@ const SearchBar = () => {
     setFilteredPokemonList(filteredList);
   };
 
-  // Allow the search to be completed when the Enter key is pressed
+  // allow the search to be completed when the enter key is pressed
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       if (filteredPokemonList.length > 0) {
-        // If the drop-down is visible, select the first item and hide the drop-down
+        // If dropdown is visible, select the first item and hide dropdown
         handleSelectPokemon(filteredPokemonList[0]);
         setFilteredPokemonList([]);
       } else {
-        // If the drop-down is not visible, perform the search
+        // If dropdown is not visible, perform search
         handleSearch();
       }
     }
   };
 
-  // Convert the user search to lowercase to match it to the speciesName
+  //Convert the user search to lowercase to match it to the speciesName
   const handleSearch = () => {
     const selected = pokemon_info.find(
       (pokemon) =>
@@ -102,20 +93,14 @@ const SearchBar = () => {
     setSelectedPokemon(pokemon);
   };
 
-  const calculateFastMoveCountForChargedMove = (
+  const calculateFastMoveCountsForChargedMove = (
     pokemonName: string,
     fastMoveNames: string[],
     chargedMoveEnergy: number
-  ): { movesNeeded: number; remainder: number } => {
+  ): { movesNeeded: number[]; remainder: number } => {
     const fastMoves: FastMove[] = fast_moves_data.filter(
-      (move) =>
-        move.pokemon === pokemonName && fastMoveNames.includes(move.move)
+      (fm) => fm.pokemon === pokemonName && fastMoveNames.includes(fm.move)
     );
-
-    if (fastMoves.length === 0) {
-      // No matching fast moves found
-      return { movesNeeded: -1, remainder: -1 }; // Use -1 to indicate no matching moves were found
-    }
 
     // Calculate total energy gained
     const totalEnergyGained: number = fastMoves.reduce(
@@ -123,44 +108,49 @@ const SearchBar = () => {
       0
     );
 
-    if (totalEnergyGained === 0) {
-      // No energy gained from fast moves
-      return { movesNeeded: -1, remainder: -1 }; // Use -1 to indicate no energy gained from fast moves
-    }
+    let remainder = -0.1;
+    let movesNeeded: number[] = [];
 
-    let remainder = chargedMoveEnergy;
-    let movesNeeded = 0;
+    for (let i = 0; i < 3; i++) {
+      // Calculate how many times the charged move can be executed with the current energy
+      let chargedMoveExecutions = Math.floor(
+        (chargedMoveEnergy + remainder) / totalEnergyGained
+      );
 
-    for (let i = 0; i < 5; i++) {
-      if (remainder >= totalEnergyGained) {
-        const moves = Math.floor(remainder / totalEnergyGained);
-        movesNeeded += moves;
-        remainder %= totalEnergyGained;
-      } else {
-        break;
+      // Calculate the remainder of energy after executing the charged move
+      remainder = (chargedMoveEnergy + remainder) % totalEnergyGained;
+
+      if (i === 0 && remainder > 0) {
+        // For the first move, if there's a remainder, add one more fast move
+        chargedMoveExecutions++;
       }
+
+      movesNeeded.push(chargedMoveExecutions);
     }
 
     return { movesNeeded, remainder };
   };
 
-  return (
-    <div className="search-container">
-      <input
-        type="text"
-        className="search-input"
-        placeholder="Search for a Pokemon"
-        value={searchInput}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-      />
-      <button className="search-button" onClick={handleSearch}>
-        Search
-      </button>
+  // Allowing the user to drag and drop the order of the fast moves or charged moves in a table.
 
-      {/* drop-down list */}
+
+  return (
+    <body>
+      <section className="search">
+        <input
+          type="search"
+          placeholder="Pokemon Name"
+          value={searchInput}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          autoComplete="yes"
+          list="yes"
+        />
+      </section>
+
+      {/* Dropdown List here */}
       {filteredPokemonList.length > 0 && (
-        <ul className="dropdown-list" ref={dropDownRef}>
+        <ul className="search-dropdown" ref={dropDownRef}>
           {filteredPokemonList.map((pokemon) => (
             <li
               key={pokemon.speciesId}
@@ -173,37 +163,80 @@ const SearchBar = () => {
       )}
 
       {selectedPokemon && (
-        <div className="result-container">
-          {/* Display Pokémon name */}
-          <h2>{selectedPokemon.speciesName}</h2>
-
-          {/* Display fast moves */}
-          <h3 className="result-details">Fast Moves:</h3>
-          <ul>
-            {fast_moves_data
-              .filter((move) => move.pokemon === selectedPokemon.speciesName)
-              .map((move, index) => (
-                <li key={index} className="list-item">
-                  {move.move}, Energy Gain: {move.energy_gain}
-                </li>
-              ))}
-          </ul>
-
-          {/* Display Charged moves */}
-          <h3 className="result-details">Charged Moves:</h3>
-          <ul>
-            {charged_moves_data
-              .filter((move) => move.pokemon === selectedPokemon.speciesName)
-              .map((move, index) => (
-                <li key={index} className="list-item">
-                  {move.move}, Energy Needed: {move.energy}
-                </li>
-              ))}
-          </ul>
-          
-        </div>
+        <section className="pokemon-basic-info">
+          {/* Pokemon Name */}
+          <h2 className="pokemon-name">{selectedPokemon.speciesName}</h2>
+        </section>
       )}
-    </div>
+
+      {selectedPokemon && (
+        <section className="move-chart">
+          {/* Display Amount of Fast Moves Needed to Execute a Charged Move */}
+          <h3 className="move-heading">
+            Amount of moves it takes to execute one charged move (3 Consecutive
+            Times):
+          </h3>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  {/* Pokemon Name in table head */}
+                  <th>{selectedPokemon.speciesName}</th>
+                  {/* Pokemon fast moves in the row */}
+                  {fast_moves_data
+                    .filter(
+                      (fastMove) =>
+                        fastMove.pokemon === selectedPokemon.speciesName
+                    )
+                    .map((fastMove, index) => (
+                      <th 
+                      key={index}
+                      title={`Energy Gain: ${fastMove.energy_gain}`}
+                      >
+                      {fastMove.move}</th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {/* Pokemon charged moves in the columns */}
+                {charged_moves_data
+                  .filter(
+                    (cmMove) => cmMove.pokemon === selectedPokemon.speciesName
+                  )
+                  .map((cmMove, cmIndex) => (
+                    <tr key={cmIndex} 
+                    title={`Energy Needed: ${cmMove.energy}`}
+                    >
+                      <td>{cmMove.move}</td>
+                      {/* Pokemon fm needed for cm chart */}
+                      {fast_moves_data
+                        .filter(
+                          (fastMove) =>
+                            fastMove.pokemon === selectedPokemon.speciesName
+                        )
+                        .map((fastMove, fastIndex) => {
+                          const { movesNeeded } =
+                            calculateFastMoveCountsForChargedMove(
+                              selectedPokemon.speciesName,
+                              [fastMove.move],
+                              cmMove.energy
+                            );
+                          return (
+                            <td key={fastIndex}>
+                              {movesNeeded.length === 0
+                                ? "No matching moves"
+                                : `${movesNeeded.join("  |  ")}`}
+                            </td>
+                          );
+                        })}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+    </body>
   );
 };
 

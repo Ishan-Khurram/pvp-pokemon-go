@@ -1,12 +1,15 @@
 import React, { useState } from "react";
+import SearchBar from "Components/search_bar";
+import Search from "Components/test-search";
 
 const Home: React.FC = () => {
 
 
   return (
-    <div>
+    <header>
       <h1 className="page-title">Welcome to the Home page!</h1>
-    </div>
+      <Search/>
+    </header>
   );
 };
 
